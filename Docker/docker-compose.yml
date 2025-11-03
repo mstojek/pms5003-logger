@@ -1,0 +1,36 @@
+services:
+  pms5003:
+    build: ./pms5003
+    container_name: pms5003
+    privileged: true
+    restart: unless-stopped
+    devices:
+      - /dev/ttyS0:/dev/serial0
+      - /dev/gpiochip0:/dev/gpiochip0
+      - /dev/gpiochip1:/dev/gpiochip1
+    cap_add:
+      - SYS_RAWIO
+    environment:
+      SERIAL_PORT: /dev/serial0
+      ENABLE_PIN: 24
+      WARMUP_TIME: 50
+      MEASURE_PERIOD: 900
+      DOMOTICZ_IP: 192.168.1.1
+      DOMOTICZ_PORT: 8080
+      DOMOTICZ_USER: administrator
+      DOMOTICZ_PASSWORD: domoticz
+      PM_1_IDX: 2
+      PM_25_IDX: 3
+      PM_10_IDX: 4
+      PM_1_PERCENT_IDX: 5
+      PM_25_PERCENT_IDX: 6
+      PM_10_PERCENT_IDX: 7
+    volumes:
+      - /sys/class/gpio:/sys/class/gpio
+      - /sys/devices:/sys/devices
+    healthcheck:
+      test: ["CMD-SHELL", "pgrep -f pmlog.py >/dev/null && [ -e /dev/serial0 ]"]
+      interval: ${MEASURE_PERIOD:-900}s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
